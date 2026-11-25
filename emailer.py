@@ -31,19 +31,19 @@ def is_valid_email(addr: str) -> bool:
 def _bodies(company: str, report_id: str, source_name: str) -> tuple[str, str]:
     text = (
         "Hello,\n\n"
-        f"Your video analysis report for \"{company}\" is attached as a PDF.\n\n"
+        f"Your Employee Happiness Awards Insights & Analysis Report for \"{company}\" is attached as a PDF.\n\n"
         f"Report ID: {report_id}\n"
-        f"Source video: {source_name or 'Not available'}\n\n"
-        "This email was sent automatically by Video Insights.\n"
+        f"Session Source: {source_name or 'Judging Session'}\n\n"
+        "This email was sent automatically by the Employee Happiness Awards platform.\n"
     )
     h = lambda s: html.escape(str(s))
     page = (
         "<div style=\"font-family:Arial,sans-serif;color:#111827;line-height:1.5\">"
         "<p>Hello,</p>"
-        f"<p>Your video analysis report for <strong>{h(company)}</strong> is attached as a PDF.</p>"
+        f"<p>Your Employee Happiness Awards Insights & Analysis Report for <strong>{h(company)}</strong> is attached as a PDF.</p>"
         f"<p style=\"color:#6b7280;font-size:13px\">Report ID: {h(report_id)}<br>"
-        f"Source video: {h(source_name or 'Not available')}</p>"
-        "<p style=\"color:#6b7280;font-size:13px\">This email was sent automatically by Video Insights.</p></div>"
+        f"Session Source: {h(source_name or 'Judging Session')}</p>"
+        "<p style=\"color:#6b7280;font-size:13px\">This email was sent automatically by the Employee Happiness Awards platform.</p></div>"
     )
     return text, page
 

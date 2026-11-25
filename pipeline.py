@@ -33,7 +33,7 @@ def safe_delete_temp(path: Path | None) -> None:
 
 
 def make_report_id(now: datetime) -> str:
-    return f"VAR-{now:%Y%m%d}-{uuid.uuid4().hex[:4].upper()}"
+    return f"EHA-{now:%Y%m%d}-{uuid.uuid4().hex[:4].upper()}"
 
 
 def run_pipeline(video_path: Path, source_name: str, keep_pdf: bool = False) -> dict:
@@ -50,12 +50,15 @@ def run_pipeline(video_path: Path, source_name: str, keep_pdf: bool = False) -> 
         report_id = make_report_id(generated_at)
         pdf_path = build_pdf(analysis, source_name, report_id, generated_at)
         pdf_bytes = pdf_path.read_bytes()
+        comp_info = analysis.get("company_info") or {}
+        company = clean_company(comp_info.get("company_name") or analysis.get("company_name", ""))
+        category = str(comp_info.get("award_category") or analysis.get("company_category") or "Not mentioned")
         return {
             "analysis": analysis,
             "report_id": report_id,
             "generated_at": generated_at.isoformat(timespec="seconds"),
-            "company": clean_company(analysis.get("company_name", "")),
-            "category": str(analysis.get("company_category") or "Not mentioned"),
+            "company": company,
+            "category": category,
             "pdf_base64": base64.b64encode(pdf_bytes).decode("ascii"),
             "pdf_path": str(pdf_path) if keep_pdf else None,
         }

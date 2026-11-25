@@ -31,6 +31,58 @@ class GeminiProcessingError(RuntimeError):
 
 
 # --- Response schema ----------------------------------------------------------
+class CompanyInfo(BaseModel):
+    company_name: str = Field(default="Not mentioned", description="Exact company name mentioned or implied")
+    award_category: str = Field(default="Not mentioned", description="Award category nominated, e.g. Best Company to Work For – Medium")
+    awards_edition: str = Field(default="Employee Happiness Awards UAE 2026", description="Awards edition")
+    industry: str = Field(default="Not specified", description="Industry or sector, e.g. Real Estate, Retail, IT Services")
+    employee_headcount: str = Field(default="Not specified", description="Employee headcount / company size")
+    year_of_establishment: str = Field(default="Not specified", description="Year company was established")
+    presenter_name_and_designation: str = Field(default="Not specified", description="Presenter name and designation/job title")
+
+
+class PillarAnalysisItem(BaseModel):
+    pillar_name: str = Field(description="Name of the employee lifecycle pillar, e.g. Attraction & Onboarding, Learning & Growth, Well-being, Leadership & Strategy, Culture, Retention & Exit")
+    initiatives_and_practices: str = Field(description="Evidence-based analysis of the initiatives, programmes, leadership involvement, employee feedback mechanisms, and policies presented under this pillar")
+    supporting_evidence: str = Field(default="", description="Specific supporting evidence citing presentation slides or verbal discussion highlights without raw timestamps")
+
+
+class MeasurableOutcome(BaseModel):
+    metric_name: str = Field(description="Name of metric or KPI, e.g. Employee Retention Rate, eNPS, Training Hours")
+    baseline_or_previous: str = Field(default="Not stated", description="Baseline, previous figure, or target benchmark")
+    achieved_result: str = Field(description="Achieved outcome or current metric figure")
+    context_and_significance: str = Field(default="", description="What the result demonstrates in relation to the initiatives")
+
+
+class KeyFindingsAndImpact(BaseModel):
+    measurable_outcomes: list[MeasurableOutcome] = Field(default_factory=list, description="Measurable outcomes and comparative metrics")
+    survey_and_qualitative_feedback: str = Field(default="", description="Employee survey results, satisfaction levels, and qualitative testimonials")
+    progress_against_objectives: str = Field(default="", description="Progress against stated targets (organisation-reported findings)")
+
+
+class JuryObservation(BaseModel):
+    jury_topic_or_question: str = Field(description="Key question, challenge, or topic raised by the jury during Q&A")
+    organisation_response: str = Field(default="", description="How the presenter addressed the question")
+    key_observation: str = Field(default="", description="Jury observation or area where additional evidence was discussed")
+
+
+class FeedbackAndNextSteps(BaseModel):
+    jury_observations: list[JuryObservation] = Field(default_factory=list, description="Explicit jury observations and Q&A findings")
+    presentation_evidence_gaps: list[str] = Field(default_factory=list, description="Areas where additional data or evidence could strengthen the presentation")
+    ai_recommendations_and_sustainability: list[str] = Field(default_factory=list, description="Constructive AI-generated recommendations and sustainability next steps")
+
+
+class EHAReportAnalysis(BaseModel):
+    company_info: CompanyInfo = Field(default_factory=CompanyInfo)
+    executive_overview: str = Field(description="Executive narrative introducing presentation rationale, objectives, execution approach, and jury Q&A context")
+    pillars_analysis: list[PillarAnalysisItem] = Field(default_factory=list, description="Pillar-by-pillar analysis of initiatives and practices")
+    key_findings_and_impact: KeyFindingsAndImpact = Field(default_factory=KeyFindingsAndImpact)
+    feedback_and_next_steps: FeedbackAndNextSteps = Field(default_factory=FeedbackAndNextSteps)
+    conclusion: str = Field(description="Executive conclusion summarizing key strengths, achievements, and lifecycle pillar alignment")
+    transcript: str = Field(default="", description="Full verbatim transcript with speaker labels")
+
+
+# Legacy compatibility schema
 class TimelineSegment(BaseModel):
     timestamp_range: str = Field(description="e.g. '00:00 - 05:10'")
     topic: str = Field(description="Topic discussed in this segment")
@@ -46,75 +98,23 @@ class QAItem(BaseModel):
 
 class VideoAnalysis(BaseModel):
     company_name: str = Field(description="Company name mentioned or implied, or 'Not mentioned'.")
-    company_category: str = Field(default="Not mentioned", description="Industry or category of the company (e.g. IT Services, Healthcare, Retail), or 'Not mentioned'.")
-    video_duration: str = Field(description="Approximate video length as mm:ss.")
-    language: str = Field(description="Main language(s) spoken, e.g. 'Hindi', 'English', 'Hindi and English'.")
-    summary: str = Field(description="Neutral 2 to 3 sentence overview of the video.")
-    timeline: list[TimelineSegment] = Field(default_factory=list, description="Topical meeting timeline segments with timestamps")
-    transcript: str = Field(description="Full verbatim transcript with speaker labels and timestamps.")
-    qa: list[QAItem]
-
-
-PROMPT_TEMPLATE = """You are an expert agentic video analyst. Conduct a comprehensive, two-stage evaluation of the attached meeting video and presentation:
-
-STAGE 1: TIMELINE & TRANSCRIPTION SCAN
-1. Transcribe the meeting dialogue verbatim from start to finish with speaker labels and timestamp references (e.g. "[00:15 - 00:42] Speaker 1: ...").
-2. Map the meeting into topical timeline segments with start-to-end timestamps, noting whether visual presentation slides or screen shares are active.
-
-STAGE 2: TARGETED VISUAL GROUNDING & SIX PILLARS SYNTHESIS
-1. Locate the exact timestamp segments where presentation slides or visuals detailing the Six Pillars of Employee Wellbeing appear.
-2. Cross-reference spoken dialogue against on-screen slide bullet points, graphics, and figures.
-3. For each question, synthesize a detailed answer, provide the exact relevant timestamp window in "timestamp", and cite the supporting oral/visual evidence (referencing slide titles where visible) in "reasoning".
-
-Return ONLY a single JSON object (no markdown, no commentary) with exactly this shape:
-{{
-  "company_name": "<company name mentioned or implied, or 'Not mentioned'>",
-  "company_category": "<category or industry of the company, e.g. IT Services, Healthcare, Retail, Technology, or 'Not mentioned'>",
-  "video_duration": "<approximate video length as mm:ss>",
-  "language": "<main language(s) spoken>",
-  "summary": "<neutral 2 to 3 sentence overview of the video>",
-  "timeline": [
-    {{"timestamp_range": "<e.g. 00:00 - 05:10>", "topic": "<topic title>", "has_slides": <true/false>}}
-  ],
-  "transcript": "<full exact transcript with timestamps and speaker labels>",
-  "qa": [
-    {{"question": "<question 1 verbatim>", "answer": "<answer>", "reasoning": "<evidence citing slide/quote>", "timestamp": "<e.g. 05:10 - 08:30>"}},
-    {{"question": "<question 2 verbatim>", "answer": "<answer>", "reasoning": "<evidence citing slide/quote>", "timestamp": "<e.g. 08:30 - 14:15>"}},
-    {{"question": "<question 3 verbatim>", "answer": "<answer>", "reasoning": "<evidence citing slide/quote>", "timestamp": "<e.g. 14:15 - 19:40>"}},
-    {{"question": "<question 4 verbatim>", "answer": "<answer>", "reasoning": "<evidence citing slide/quote>", "timestamp": "<e.g. 19:40 - 24:10>"}},
-    {{"question": "<question 5 verbatim>", "answer": "<answer>", "reasoning": "<evidence citing slide/quote>", "timestamp": "<e.g. 24:10 - 28:50>"}}
-  ]
-}}
-
-TRANSCRIPT RULES
-- Transcribe every spoken word exactly as spoken, in order, from start to end. Do not summarise, paraphrase, or translate.
-- Keep the original language/script of each utterance (e.g. Hindi stays in Hindi, Hinglish stays as spoken).
-- Put each speaker turn on its own line, prefixed with a speaker label and timestamp: use the person's name if stated or shown on screen, otherwise "Speaker 1:", "Speaker 2:", etc.
-- Mark non-speech sounds only if meaningful, in square brackets, e.g. [laughter], [music].
-- If there is no speech at all, set transcript to "[No speech detected]".
-
-QUESTIONS - answer each strictly from the video's audio and visual context:
-{questions}
-
-ANSWER RULES
-- Base answers only on what is said or shown in the video. Inspect both spoken audio and presentation slides carefully, especially when identifying the Six Pillars of Employee Wellbeing, company category, and specific initiatives. Do not use outside knowledge to invent facts.
-- If an answer is not stated but can reasonably be inferred from context, give it and begin the answer with "Implied: ".
-- If it is neither stated nor implied, answer exactly "{not_mentioned}".
-- Write each answer as a clear, professional summary of 2 to 4 sentences. Include specific figures, programmes or examples when they are stated.
-- Put supporting evidence (citing the slide title, visual graphic, or direct quote) in "reasoning", and populate the corresponding timestamp window in "timestamp".
-"""
+    company_category: str = Field(default="Not mentioned", description="Industry or category of the company.")
+    video_duration: str = Field(default="Not available", description="Approximate video length as mm:ss.")
+    language: str = Field(default="Not available", description="Main language(s) spoken.")
+    summary: str = Field(default="", description="Neutral overview of the video.")
+    timeline: list[TimelineSegment] = Field(default_factory=list)
+    transcript: str = Field(default="", description="Full verbatim transcript.")
+    qa: list[QAItem] = Field(default_factory=list)
 
 
 PROMPT_FILE = config.BASE_DIR / "gemini_prompt_file.txt"
 
 
 def build_prompt() -> str:
-    qs = "\n".join(f"Q{i}: {q}" for i, q in enumerate(config.QUESTIONS, 1))
+    """Load prompt template from file, or fall back to internal default."""
     if PROMPT_FILE.exists():
-        template = PROMPT_FILE.read_text(encoding="utf-8")
-    else:
-        template = PROMPT_TEMPLATE
-    return template.format(questions=qs, not_mentioned=NOT_MENTIONED)
+        return PROMPT_FILE.read_text(encoding="utf-8")
+    return "You are an expert evaluator for the Employee Happiness Awards. Analyze the presentation video and return EHAReportAnalysis JSON."
 
 
 # --- Client / file handling ----------------------------------------------------
@@ -203,48 +203,148 @@ def parse_model_json(text: str) -> dict:
 
 
 def normalize_analysis(data: dict) -> dict:
-    """Coerce arbitrary model output into {transcript, qa:[one item per configured question, fixed order]}."""
-    transcript = str(data.get("transcript") or "").strip() or "[No transcript returned]"
-    raw_qa = data.get("qa") or data.get("answers") or data.get("questions") or []
-    if isinstance(raw_qa, dict):  # e.g. {"Q1": "...", ...}
-        raw_qa = [{"question": k, "answer": v} for k, v in raw_qa.items()]
+    """Normalize and validate arbitrary model output into the EHA 6-section analysis format."""
+    def _clean(val: Any, default: str = "") -> str:
+        s = str(val or "").strip()
+        return s if s else default
 
-    qa = []
-    for i, question in enumerate(config.QUESTIONS):
-        item = raw_qa[i] if i < len(raw_qa) else {}
-        if not isinstance(item, dict):
-            item = {"answer": item}
-        qa.append(
-            {
-                "question": question,
-                "answer": str(item.get("answer") or NOT_MENTIONED).strip(),
-                "reasoning": str(item.get("reasoning") or "").strip(),
-                "timestamp": str(item.get("timestamp") or "").strip(),
-            }
-        )
-    def _text(key: str, default: str) -> str:
-        return str(data.get(key) or "").strip() or default
+    raw_comp = data.get("company_info") or {}
+    if not isinstance(raw_comp, dict):
+        raw_comp = {}
 
-    timeline_raw = data.get("timeline") or []
-    timeline = []
-    if isinstance(timeline_raw, list):
-        for t in timeline_raw:
-            if isinstance(t, dict):
-                timeline.append({
-                    "timestamp_range": str(t.get("timestamp_range") or "").strip(),
-                    "topic": str(t.get("topic") or "").strip(),
-                    "has_slides": bool(t.get("has_slides")),
+    company_name = _clean(raw_comp.get("company_name") or data.get("company_name"), "Not mentioned")
+    award_category = _clean(raw_comp.get("award_category") or data.get("company_category"), "Not mentioned")
+    awards_edition = _clean(raw_comp.get("awards_edition"), config.DEFAULT_AWARDS_EDITION)
+    industry = _clean(raw_comp.get("industry"), "Not specified")
+    employee_headcount = _clean(raw_comp.get("employee_headcount"), "Not specified")
+    year_of_establishment = _clean(raw_comp.get("year_of_establishment"), "Not specified")
+    presenter_name_and_designation = _clean(raw_comp.get("presenter_name_and_designation"), "Not specified")
+
+    company_info = {
+        "company_name": company_name,
+        "award_category": award_category,
+        "awards_edition": awards_edition,
+        "industry": industry,
+        "employee_headcount": employee_headcount,
+        "year_of_establishment": year_of_establishment,
+        "presenter_name_and_designation": presenter_name_and_designation,
+    }
+
+    # Section 2: Executive Overview
+    executive_overview = _clean(data.get("executive_overview") or data.get("summary"))
+
+    # Section 3: Employee Initiatives & Practices (Pillar-wise)
+    raw_pillars = data.get("pillars_analysis") or []
+    pillars_analysis = []
+    if isinstance(raw_pillars, list):
+        for p in raw_pillars:
+            if isinstance(p, dict):
+                p_name = _clean(p.get("pillar_name"))
+                p_init = _clean(p.get("initiatives_and_practices"))
+                p_evid = _clean(p.get("supporting_evidence"))
+                if p_name and p_init:
+                    pillars_analysis.append({
+                        "pillar_name": p_name,
+                        "initiatives_and_practices": p_init,
+                        "supporting_evidence": p_evid,
+                    })
+
+    # If no structured pillars were parsed, fall back to extracting from legacy QA if present
+    if not pillars_analysis and data.get("qa"):
+        for q_item in data.get("qa", []):
+            if isinstance(q_item, dict):
+                q_text = str(q_item.get("question") or "")
+                topic = q_text.split(":")[0].strip() if ":" in q_text else q_text[:30]
+                pillars_analysis.append({
+                    "pillar_name": topic,
+                    "initiatives_and_practices": _clean(q_item.get("answer")),
+                    "supporting_evidence": _clean(q_item.get("reasoning")),
                 })
 
+    # Section 4: Key Findings & Impact
+    raw_impact = data.get("key_findings_and_impact") or {}
+    if not isinstance(raw_impact, dict):
+        raw_impact = {}
+
+    measurable_outcomes = []
+    for mo in raw_impact.get("measurable_outcomes") or []:
+        if isinstance(mo, dict):
+            m_name = _clean(mo.get("metric_name"))
+            if m_name:
+                measurable_outcomes.append({
+                    "metric_name": m_name,
+                    "baseline_or_previous": _clean(mo.get("baseline_or_previous"), "Not stated"),
+                    "achieved_result": _clean(mo.get("achieved_result"), "Demonstrated"),
+                    "context_and_significance": _clean(mo.get("context_and_significance")),
+                })
+
+    key_findings_and_impact = {
+        "measurable_outcomes": measurable_outcomes,
+        "survey_and_qualitative_feedback": _clean(raw_impact.get("survey_and_qualitative_feedback")),
+        "progress_against_objectives": _clean(raw_impact.get("progress_against_objectives")),
+    }
+
+    # Section 5: Feedback & Next Steps
+    raw_fb = data.get("feedback_and_next_steps") or {}
+    if not isinstance(raw_fb, dict):
+        raw_fb = {}
+
+    jury_observations = []
+    for jo in raw_fb.get("jury_observations") or []:
+        if isinstance(jo, dict):
+            j_q = _clean(jo.get("jury_topic_or_question"))
+            if j_q:
+                jury_observations.append({
+                    "jury_topic_or_question": j_q,
+                    "organisation_response": _clean(jo.get("organisation_response")),
+                    "key_observation": _clean(jo.get("key_observation")),
+                })
+
+    presentation_evidence_gaps = [
+        _clean(g) for g in raw_fb.get("presentation_evidence_gaps") or [] if _clean(g)
+    ]
+    ai_recommendations = [
+        _clean(r) for r in raw_fb.get("ai_recommendations_and_sustainability") or [] if _clean(r)
+    ]
+
+    feedback_and_next_steps = {
+        "jury_observations": jury_observations,
+        "presentation_evidence_gaps": presentation_evidence_gaps,
+        "ai_recommendations_and_sustainability": ai_recommendations,
+    }
+
+    # Section 6: Conclusion
+    conclusion = _clean(data.get("conclusion"))
+
+    # Transcript
+    transcript = _clean(data.get("transcript"), "[No transcript returned]")
+
+    # Legacy QA synthesis for older consumers
+    qa = []
+    for p in pillars_analysis:
+        qa.append({
+            "question": f"Pillar: {p['pillar_name']}",
+            "answer": p["initiatives_and_practices"],
+            "reasoning": p["supporting_evidence"],
+            "timestamp": "",
+        })
+
     return {
-        "company_name": _text("company_name", "Not mentioned"),
-        "company_category": _text("company_category", "Not mentioned"),
-        "video_duration": _text("video_duration", "Not available"),
-        "language": _text("language", "Not available"),
-        "summary": _text("summary", ""),
-        "timeline": timeline,
+        "company_info": company_info,
+        "executive_overview": executive_overview,
+        "pillars_analysis": pillars_analysis,
+        "key_findings_and_impact": key_findings_and_impact,
+        "feedback_and_next_steps": feedback_and_next_steps,
+        "conclusion": conclusion,
         "transcript": transcript,
+        # Top-level legacy aliases for maximum backward compatibility
+        "company_name": company_name,
+        "company_category": award_category,
+        "summary": executive_overview,
         "qa": qa,
+        "timeline": data.get("timeline") or [],
+        "video_duration": _clean(data.get("video_duration"), "Not available"),
+        "language": _clean(data.get("language"), "Not available"),
     }
 
 
@@ -277,7 +377,7 @@ def analyze_video(path: Path, ref: dict) -> dict:
                     contents=[file_obj, build_prompt()],
                     config=types.GenerateContentConfig(
                         response_mime_type="application/json",
-                        response_schema=VideoAnalysis,
+                        response_schema=EHAReportAnalysis,
                         temperature=0.1,
                     ),
                 )
@@ -327,7 +427,7 @@ def analyze_video(path: Path, ref: dict) -> dict:
         raise GeminiProcessingError(f"Gemini analysis failed across models ({', '.join(candidate_models)}): {last_err}")
 
     parsed = getattr(response, "parsed", None)
-    if isinstance(parsed, VideoAnalysis):
+    if isinstance(parsed, (EHAReportAnalysis, VideoAnalysis)):
         data = parsed.model_dump()
     else:
         data = parse_model_json(response.text or "")

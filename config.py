@@ -42,8 +42,8 @@ POLL_INTERVAL_S = 3
 EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "brevo").strip().lower()   # brevo | gmail
 # Sender address (BREVO_SENDER_EMAIL is accepted as a legacy alias).
 SENDER_EMAIL = (os.getenv("SENDER_EMAIL") or os.getenv("BREVO_SENDER_EMAIL") or "rk26.ftw@gmail.com").strip()
-SENDER_NAME = (os.getenv("SENDER_NAME") or os.getenv("BREVO_SENDER_NAME") or "Video Insights").strip()
-EMAIL_SUBJECT = "Your Video Analysis Report"
+SENDER_NAME = (os.getenv("SENDER_NAME") or os.getenv("BREVO_SENDER_NAME") or "Employee Happiness Awards").strip()
+EMAIL_SUBJECT = "EHA | Insights & Analysis Report"
 MAX_ATTACHMENT_MB = 5
 SEND_LIMIT_PER_MINUTE = 10
 
@@ -58,7 +58,55 @@ VIDEO_MIME_TYPES = {
     ".avi": "video/x-msvideo",
 }
 
-# --- The fixed questions -----------------------------------------------------
+# --- EHA Report Settings & Category-to-Pillar Mappings -----------------------
+REPORT_TITLE = "EHA | Insights & Analysis Report"
+PDF_FOOTER_TEXT = "Employee Happiness Awards | Confidential"
+DEFAULT_AWARDS_EDITION = "Employee Happiness Awards UAE 2026"
+EHA_LOGO_PATH = STATIC_DIR / "eha_logo.png"
+
+# The six pillars of the employee lifecycle
+EHA_LIFECYCLE_PILLARS = [
+    "Attraction & Onboarding",
+    "Learning & Growth",
+    "Well-being",
+    "Leadership & Strategy",
+    "Culture",
+    "Retention & Exit",
+]
+
+# Predefined category-to-pillar mapping for EHA award categories
+CATEGORY_PILLAR_MAPPING: dict[str, list[str]] = {
+    "best company to work for": EHA_LIFECYCLE_PILLARS,
+    "best company to work for – large": EHA_LIFECYCLE_PILLARS,
+    "best company to work for – medium": EHA_LIFECYCLE_PILLARS,
+    "best company to work for – small": EHA_LIFECYCLE_PILLARS,
+    "best l&d strategy": ["Learning & Growth", "Leadership & Strategy", "Culture"],
+    "best learning & development strategy": ["Learning & Growth", "Leadership & Strategy", "Culture"],
+    "best workplace culture": ["Culture", "Leadership & Strategy", "Well-being"],
+    "best employee onboarding": ["Attraction & Onboarding", "Learning & Growth", "Culture"],
+    "best employee onboarding programme": ["Attraction & Onboarding", "Learning & Growth", "Culture"],
+    "best employee well-being": ["Well-being", "Culture", "Leadership & Strategy"],
+    "best employee well-being strategy": ["Well-being", "Culture", "Leadership & Strategy"],
+    "best leadership development": ["Leadership & Strategy", "Learning & Growth", "Culture"],
+    "best leadership development programme": ["Leadership & Strategy", "Learning & Growth", "Culture"],
+    "best talent retention strategy": ["Retention & Exit", "Culture", "Learning & Growth", "Well-being"],
+    "best employee engagement": ["Culture", "Well-being", "Leadership & Strategy"],
+    "best diversity, equity & inclusion strategy": ["Culture", "Leadership & Strategy", "Attraction & Onboarding"],
+}
+
+
+def get_applicable_pillars(category: str | None) -> list[str]:
+    """Resolve applicable pillars based on category string, defaulting to all six pillars."""
+    if not category:
+        return list(EHA_LIFECYCLE_PILLARS)
+    norm = category.lower().strip()
+    for cat_key, pillars in CATEGORY_PILLAR_MAPPING.items():
+        if cat_key in norm or norm in cat_key:
+            return list(pillars)
+    return list(EHA_LIFECYCLE_PILLARS)
+
+
+# --- Legacy compatibility questions (fallback) ------------------------------
 QUESTIONS = [
     "Six Pillars of Wellbeing: What are the six pillars of employee wellbeing identified or referenced in the presentation, and what is the organisation's core philosophy on each?",
     "Initiatives Implemented: What specific programmes, initiatives, or workplace policies have been implemented to support employee wellbeing across these pillars?",

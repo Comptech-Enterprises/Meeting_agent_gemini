@@ -199,12 +199,23 @@
   // Render a report
   function renderReport(r) {
     current = r;
+    const a = r.analysis || r;
+    const ci = a.company_info || r.company_info || {};
+
     emptyEl.hidden = true;
     reportEl.hidden = false;
-    $("r-company").textContent = r.company;
-    const cat = r.category && r.category !== "Not mentioned" ? r.category : "Employee Wellbeing Report";
-    $("r-sub").textContent = cat;
-    $("r-id").textContent = r.report_id;
+
+    const companyName = ci.company_name || r.company || a.company_name || "Employee Happiness Awards Report";
+    const awardCategory = ci.award_category || r.category || a.award_category || a.company_category || "Best Company to Work For";
+    const edition = ci.awards_edition || "Employee Happiness Awards UAE 2026";
+    const industry = ci.industry || "Not specified";
+    const headcount = ci.employee_headcount || "Not specified";
+    const established = ci.year_of_establishment || "Not specified";
+    const presenter = ci.presenter_name_and_designation || "Not specified";
+
+    $("r-company").textContent = companyName;
+    $("r-sub").textContent = awardCategory;
+    $("r-id").textContent = r.report_id || "";
 
     const createdStr = fmtDateTime(r.generated_at || new Date().toISOString());
     const createdEl = $("r-created");
@@ -212,49 +223,178 @@
       createdEl.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>Created: ${esc(createdStr)}</span>`;
     }
 
+    // Section 1: Company Details Block (7 fields)
     const tiles = [
-      ["Category", r.category || "Not mentioned"],
-      ["Duration", r.meta?.duration || "Not available"],
-      ["Language", r.meta?.language || "Not available"],
-      ["Created", createdStr],
-      ["Report ID", r.report_id],
+      ["Company Name", companyName],
+      ["Award Category", awardCategory],
+      ["Awards Edition", edition],
+      ["Industry", industry],
+      ["Employee Headcount", headcount],
+      ["Year Established", established],
+      ["Presenter", presenter],
     ];
     $("r-tiles").innerHTML = tiles.map(([k, v]) =>
       `<div class="tile"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join("");
 
     resetEmailBox();
 
-    $("r-summary-wrap").hidden = !r.summary;
-    $("r-summary").textContent = r.summary || "";
+    // Section 2: Executive Overview
+    const execWrap = $("r-executive-overview-wrap");
+    const execTextEl = $("r-executive-overview");
+    const overview = a.executive_overview || a.summary || r.summary || "";
+    if (execWrap && execTextEl) {
+      execWrap.hidden = !overview;
+      execTextEl.textContent = overview;
+    }
 
-    const timelineWrap = $("r-timeline-wrap");
-    const timelineEl = $("r-timeline");
-    if (timelineWrap && timelineEl) {
-      if (r.timeline && r.timeline.length > 0) {
-        timelineWrap.hidden = false;
-        timelineEl.innerHTML = r.timeline.map((item) => `
-          <div class="timeline-item">
-            <span class="timeline-ts">${esc(item.timestamp_range)}</span>
-            <span class="timeline-title">${esc(item.topic)}</span>
-            ${item.has_slides ? '<span class="timeline-badge">Presentation Slides</span>' : ''}
+    // Section 3: Employee Initiatives & Practices (Pillars)
+    const pillarsWrap = $("r-pillars-wrap");
+    const pillarsEl = $("r-pillars");
+    const pillars = a.pillars_analysis || r.pillars_analysis || [];
+    if (pillarsWrap && pillarsEl) {
+      if (pillars.length > 0) {
+        pillarsWrap.hidden = false;
+        pillarsEl.innerHTML = pillars.map(p => `
+          <div class="pillar-card">
+            <div class="pillar-card-header">
+              <span class="pillar-badge">Pillar</span>
+              <span class="pillar-title">${esc(p.pillar_name)}</span>
+            </div>
+            <div class="pillar-body">${esc(p.initiatives_and_practices)}</div>
+            ${p.supporting_evidence ? `<div class="pillar-evidence"><strong>Supporting Evidence:</strong> ${esc(p.supporting_evidence)}</div>` : ""}
           </div>
         `).join("");
       } else {
-        timelineWrap.hidden = true;
+        pillarsWrap.hidden = true;
       }
     }
 
-    $("r-qa").innerHTML = (r.qa || []).map((q, i) => `
-      <div class="qa-card">
-        <div class="qa-label q">
-          Question ${i + 1}
-          ${q.timestamp ? `<span class="qa-ts">${esc(q.timestamp)}</span>` : ""}
-        </div>
-        <div class="qa-q">${esc(q.question)}</div>
-        <div class="qa-label a">Answer ${i + 1}</div>
-        <div class="qa-a">${esc(q.answer)}</div>
-        ${q.reasoning ? `<div class="qa-e">Evidence: ${esc(q.reasoning)}</div>` : ""}
-      </div>`).join("");
+    // Section 4: Key Findings & Impact
+    const impactWrap = $("r-impact-wrap");
+    const impact = a.key_findings_and_impact || r.key_findings_and_impact || {};
+    const outcomes = impact.measurable_outcomes || [];
+    const survey = impact.survey_and_qualitative_feedback || "";
+    const progress = impact.progress_against_objectives || "";
+
+    if (impactWrap) {
+      const hasImpact = outcomes.length > 0 || survey || progress;
+      impactWrap.hidden = !hasImpact;
+
+      const tableWrap = $("r-outcomes-table-wrap");
+      if (tableWrap) {
+        if (outcomes.length > 0) {
+          tableWrap.hidden = false;
+          tableWrap.innerHTML = `
+            <table class="eha-table">
+              <thead>
+                <tr>
+                  <th>Metric / KPI</th>
+                  <th>Baseline / Target</th>
+                  <th>Achieved Outcome</th>
+                  <th>Context &amp; Significance</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${outcomes.map(o => `
+                  <tr>
+                    <td class="metric-name">${esc(o.metric_name)}</td>
+                    <td>${esc(o.baseline_or_previous || "Not stated")}</td>
+                    <td class="achieved-val">${esc(o.achieved_result)}</td>
+                    <td>${esc(o.context_and_significance || "")}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          `;
+        } else {
+          tableWrap.hidden = true;
+          tableWrap.innerHTML = "";
+        }
+      }
+
+      const surveyWrap = $("r-survey-wrap");
+      const surveyText = $("r-survey-text");
+      if (surveyWrap && surveyText) {
+        surveyWrap.hidden = !survey;
+        surveyText.textContent = survey;
+      }
+
+      const progWrap = $("r-progress-wrap");
+      const progText = $("r-progress-text");
+      if (progWrap && progText) {
+        progWrap.hidden = !progress;
+        progText.textContent = progress;
+      }
+    }
+
+    // Section 5: Feedback & Next Steps
+    const fbWrap = $("r-feedback-wrap");
+    const fb = a.feedback_and_next_steps || r.feedback_and_next_steps || {};
+    const juryList = fb.jury_observations || [];
+    const gapsList = fb.presentation_evidence_gaps || [];
+    const recsList = fb.ai_recommendations_and_sustainability || [];
+
+    if (fbWrap) {
+      const hasFb = juryList.length > 0 || gapsList.length > 0 || recsList.length > 0;
+      fbWrap.hidden = !hasFb;
+
+      const juryWrap = $("r-jury-wrap");
+      const juryEl = $("r-jury-list");
+      if (juryWrap && juryEl) {
+        juryWrap.hidden = juryList.length === 0;
+        juryEl.innerHTML = juryList.map(j => `
+          <div class="jury-item">
+            <div class="jury-q">Q / Topic: ${esc(j.jury_topic_or_question)}</div>
+            ${j.organisation_response ? `<div class="jury-resp"><strong>Response:</strong> ${esc(j.organisation_response)}</div>` : ""}
+            ${j.key_observation ? `<div class="jury-obs"><strong>Jury Observation:</strong> ${esc(j.key_observation)}</div>` : ""}
+          </div>
+        `).join("");
+      }
+
+      const gapsWrap = $("r-gaps-wrap");
+      const gapsEl = $("r-gaps-list");
+      if (gapsWrap && gapsEl) {
+        gapsWrap.hidden = gapsList.length === 0;
+        gapsEl.innerHTML = gapsList.map(g => `<li>${esc(g)}</li>`).join("");
+      }
+
+      const recsWrap = $("r-recs-wrap");
+      const recsEl = $("r-recs-list");
+      if (recsWrap && recsEl) {
+        recsWrap.hidden = recsList.length === 0;
+        recsEl.innerHTML = recsList.map(rec => `<li>${esc(rec)}</li>`).join("");
+      }
+    }
+
+    // Section 6: Conclusion
+    const concWrap = $("r-conclusion-wrap");
+    const concEl = $("r-conclusion");
+    const conclusion = a.conclusion || r.conclusion || "";
+    if (concWrap && concEl) {
+      concWrap.hidden = !conclusion;
+      concEl.textContent = conclusion;
+    }
+
+    // Legacy QA fallback (if viewing an old report from history that lacks pillars)
+    const legacyWrap = $("r-legacy-qa-wrap");
+    const legacyEl = $("r-qa");
+    if (legacyWrap && legacyEl) {
+      if (pillars.length === 0 && r.qa && r.qa.length > 0) {
+        legacyWrap.hidden = false;
+        legacyEl.innerHTML = r.qa.map((q, i) => `
+          <div class="qa-card">
+            <div class="qa-label q">Finding ${i + 1}</div>
+            <div class="qa-q">${esc(q.question)}</div>
+            <div class="qa-label a">Analysis</div>
+            <div class="qa-a">${esc(q.answer)}</div>
+            ${q.reasoning ? `<div class="qa-e">Evidence: ${esc(q.reasoning)}</div>` : ""}
+          </div>
+        `).join("");
+      } else {
+        legacyWrap.hidden = true;
+        legacyEl.innerHTML = "";
+      }
+    }
   }
 
   // History (browser only)

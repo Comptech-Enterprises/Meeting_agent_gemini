@@ -1,22 +1,30 @@
-# Video Insights (Video Analysis Report Generator)
+# Employee Happiness Awards (EHA) – Insights & Analysis Report Generator
 
-Upload a video to generate a formatted **PDF report** (company name, date/time, duration, language, overview, and Q&A findings), download the full **transcript as `.txt`**, and optionally **email the report** to any recipient from `rk26.ftw@gmail.com`.
+Upload a virtual judging presentation recording to generate an official, executive-grade **EHA Insights & Analysis Report** across 6 standardized sections, download the full **transcript as `.txt`**, and optionally **email the report (PDF)** to any recipient.
 
-Stack: FastAPI, `google-genai` (Gemini File API, JSON mode), fpdf2, Brevo API / Gmail SMTP, vanilla HTML/CSS/JS.
+Stack: FastAPI, `google-genai` (Gemini 3.8 Flash, JSON mode), fpdf2, Brevo API / Gmail SMTP, vanilla HTML5/CSS3/ES6.
+
+## Report Structure (Fixed 6 Sections)
+
+1. **Company Information**: Company Name, Award Category, Awards Edition, Industry, Employee Headcount, Year Established, Presenter Name & Designation.
+2. **Executive Overview**: Presentation context, rationale, objectives, execution approach, and jury Q&A focus areas.
+3. **Employee Initiatives & Practices**: Pillar-by-pillar analysis dynamically filtered by award category mapping (Attraction & Onboarding, Learning & Growth, Well-being, Leadership & Strategy, Culture, Retention & Exit).
+4. **Key Findings & Impact**: Measurable outcomes & comparative metrics table, employee survey results, and progress against objectives (organisation-reported findings).
+5. **Feedback & Next Steps**: Strict distinction between Jury Observations & Q&A discussions and AI-generated strategic recommendations for long-term sustainability.
+6. **Conclusion**: Executive synthesis of key strengths, demonstrated achievements, and employee lifecycle pillar alignment.
 
 ## Project layout
 
 ```
-app.py                  FastAPI server (serves UI, POST /generate-report, POST /send-report)
-pipeline.py             Shared pipeline: Gemini -> PDF -> cleanup (try/finally)
-gemini_client.py        Upload video, wait for ACTIVE, prompt + robust JSON parsing
-gemini_prompt_file.txt  Editable Gemini prompt template
-pdf_report.py           Unicode-safe PDF (Noto fonts incl. Devanagari)
+app.py                  FastAPI server (serves UI, POST /generate-report, POST /send-report, S3 multipart)
+pipeline.py             Shared pipeline: Gemini -> EHA JSON -> PDF -> cleanup (try/finally)
+gemini_client.py        Upload video, wait for ACTIVE, prompt + EHA JSON schema normalization
+gemini_prompt_file.txt  Official EHA Gemini prompt template
+pdf_report.py           Unicode-safe EHA PDF generator with 6 sections, tables, logo, and footer
 emailer.py              Email sender supporting Brevo API or Gmail SMTP
-config.py               All settings (model name, email provider, sender, questions, timeouts)
-test_pipeline.py        CLI test using the sample video in the project root
+config.py               Category-to-pillar mappings, EHA constants, model configuration
 static/                 Client-facing dashboard (index.html, styles.css, app.js)
-fonts/                  Bundled Noto Sans fonts (OFL licence)
+fonts/                  Bundled Unicode fonts (Noto Sans, Noto Sans Devanagari)
 temp/                   Temporary uploads/PDFs (auto-created, auto-cleaned)
 ```
 

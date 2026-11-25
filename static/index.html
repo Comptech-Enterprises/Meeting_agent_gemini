@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Video Insights</title>
+  <title>EHA | Insights & Analysis Report</title>
   <link rel="icon" href="data:," />
   <script>
     (function () {
@@ -20,7 +20,7 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#top" aria-label="Video Insights home"><span class="brand-mark">VI</span><span class="brand-name">Video Insights</span></a>
+    <a class="brand" href="#top" aria-label="EHA Insights & Analysis Report home"><span class="brand-mark">EHA</span><span class="brand-name">Insights & Analysis Report</span></a>
     <nav class="nav" aria-label="Sections">
       <a class="pill" href="#new-title">New analysis</a>
       <a class="pill" href="#history-panel" id="nav-history" hidden>Recent reports</a>
@@ -37,14 +37,13 @@
   <main class="page" id="top">
     <section class="hero">
       <h1>
-        <span class="w" style="--i:0">Upload</span>
-        <span class="w" style="--i:1">a</span>
-        <span class="w" style="--i:2">video.</span><br />
-        <span class="w" style="--i:3">Get</span>
-        <span class="w" style="--i:4">the</span>
-        <span class="w accent" style="--i:5">report.</span>
+        <span class="w" style="--i:0">Judging</span>
+        <span class="w" style="--i:1">Session.</span><br />
+        <span class="w" style="--i:2">Get</span>
+        <span class="w" style="--i:3">EHA</span>
+        <span class="w accent" style="--i:4">Insights.</span>
       </h1>
-      <p class="hero-sub">Transcript, key findings and a PDF you can download or email.</p>
+      <p class="hero-sub">Evidence-based analysis across the 6 employee lifecycle pillars, impact metrics, and jury insights.</p>
     </section>
 
     <div class="grid">
@@ -123,7 +122,7 @@
         <div id="report" hidden>
           <div class="report-head">
             <div>
-              <div class="eyebrow">Report</div>
+              <div class="eyebrow">EHA | Insights &amp; Analysis Report</div>
               <h2 id="r-company" class="r-company"></h2>
               <div id="r-sub" class="r-sub"></div>
               <div id="r-created" class="r-created"></div>
@@ -134,6 +133,7 @@
             </div>
           </div>
 
+          <!-- Section 1: Company Information Details Block -->
           <div class="tiles" id="r-tiles"></div>
 
           <div class="actions">
@@ -158,18 +158,64 @@
             <div id="email-status" class="email-status" role="status" hidden></div>
           </div>
 
-          <div id="r-summary-wrap" hidden>
-            <h3 class="section">Executive Overview</h3>
-            <p id="r-summary" class="summary"></p>
+          <!-- Section 2: Executive Overview -->
+          <div id="r-executive-overview-wrap" class="report-section-block" hidden>
+            <h3 class="section">2. Executive Overview</h3>
+            <div id="r-executive-overview" class="summary eha-overview-text"></div>
           </div>
 
-          <div id="r-timeline-wrap" hidden>
-            <h3 class="section">Meeting Timeline &amp; Presentation Slides</h3>
-            <div id="r-timeline" class="timeline-list"></div>
+          <!-- Section 3: Employee Initiatives & Practices -->
+          <div id="r-pillars-wrap" class="report-section-block" hidden>
+            <h3 class="section">3. Employee Initiatives &amp; Practices</h3>
+            <p class="section-sub">Analysis of the organisation's initiatives, programmes and workplace practices, structured around the relevant employee lifecycle pillars:</p>
+            <div id="r-pillars" class="pillars-container"></div>
           </div>
 
-          <h3 class="section">Six Pillars & Key Findings</h3>
-          <div id="r-qa"></div>
+          <!-- Section 4: Key Findings & Impact -->
+          <div id="r-impact-wrap" class="report-section-block" hidden>
+            <div class="section-header-row">
+              <h3 class="section">4. Key Findings &amp; Impact</h3>
+              <span class="disclaimer-badge">Organisation-Reported Findings</span>
+            </div>
+            <div id="r-outcomes-table-wrap" class="eha-table-wrap"></div>
+            <div id="r-survey-wrap" class="impact-subblock" hidden>
+              <h4 class="subblock-title">Employee Survey Results &amp; Qualitative Feedback</h4>
+              <p id="r-survey-text" class="subblock-content"></p>
+            </div>
+            <div id="r-progress-wrap" class="impact-subblock" hidden>
+              <h4 class="subblock-title">Progress Against Stated Objectives</h4>
+              <p id="r-progress-text" class="subblock-content"></p>
+            </div>
+          </div>
+
+          <!-- Section 5: Feedback & Next Steps -->
+          <div id="r-feedback-wrap" class="report-section-block" hidden>
+            <h3 class="section">5. Feedback &amp; Next Steps</h3>
+            <div id="r-jury-wrap" class="feedback-subblock" hidden>
+              <div class="feedback-badge-header jury">Jury Observations &amp; Q&amp;A Discussions</div>
+              <div id="r-jury-list" class="jury-list"></div>
+            </div>
+            <div id="r-gaps-wrap" class="feedback-subblock" hidden>
+              <div class="feedback-badge-header gaps">Areas for Evidence Strengthening (Judging Observations)</div>
+              <ul id="r-gaps-list" class="evidence-gaps-list"></ul>
+            </div>
+            <div id="r-recs-wrap" class="feedback-subblock" hidden>
+              <div class="feedback-badge-header ai">Strategic Recommendations &amp; Sustainability Roadmap (AI-Generated)</div>
+              <ol id="r-recs-list" class="recs-list"></ol>
+            </div>
+          </div>
+
+          <!-- Section 6: Conclusion -->
+          <div id="r-conclusion-wrap" class="report-section-block" hidden>
+            <h3 class="section">6. Conclusion</h3>
+            <div id="r-conclusion" class="conclusion-card"></div>
+          </div>
+
+          <!-- Fallback QA (for older legacy history records) -->
+          <div id="r-legacy-qa-wrap" hidden>
+            <h3 class="section">Analysis Findings</h3>
+            <div id="r-qa"></div>
+          </div>
         </div>
       </section>
     </div>
@@ -185,10 +231,10 @@
   </main>
 
   <footer class="footer">
-    <span class="footer-brand">Video Insights</span>
-    <span>Reports are generated per upload. History stays in this browser.</span>
+    <span class="footer-brand">Employee Happiness Awards</span>
+    <span>Employee Happiness Awards | Confidential</span>
   </footer>
 
-  <script src="/static/app.js?v=20261118b"></script>
+  <script src="/static/app.js?v=20261125"></script>
 </body>
 </html>
