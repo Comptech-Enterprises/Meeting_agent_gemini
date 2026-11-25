@@ -18,7 +18,34 @@ THE 6 EMPLOYEE LIFECYCLE PILLARS (Section 3):
 - Culture (values, recognition, DEI, and community)
 - Retention & Exit (turnover benchmarks, loyalty incentives, offboarding insights)
 
-Analyze each pillar that was covered or touched upon in the presentation.
+OFFICIAL EHA AWARD CATEGORIES (Identify and match to one of these official titles for award_category):
+1. Best Employee Wellness Initiative
+2. Best Flexible Working Program
+3. Best Workspace Design
+4. Most Supportive ‘Return to Work’ Program
+5. Best Workplace for Parents in the UAE
+6. Best Diversity and Inclusion Program
+7. Best Employee Reward & Recognition Strategy
+8. Best L&D Strategy
+9. Best Internship Program
+10. Best Leadership Succession Strategy
+11. Best ‘Women-in-Leadership’ Program
+12. Talent Acquisition Strategy of the Year
+13. Best Employee Induction Program
+14. Best Community Impact Initiative
+15. Best Retention Initiative
+16. Best Employee Driven Business Change
+17. Best Use of Technology & AI in HR
+18. Best Use of Technology to Drive Learning Initiatives
+19. Best Inclusion Strategy for People of Determination
+20. Best Company to Work For – Large
+21. Best Company to Work For – Medium
+22. Best Company to Work For – Small
+23. HR Team of the Year
+24. Excellence in Emiratization (New Category)
+25. Best Workplace for Gen Z (New Category)
+
+Analyze each pillar that is applicable to the category and touched upon in the presentation.
 
 Return ONLY a single, valid JSON object (no markdown, no backticks, no commentary) with exactly this JSON structure:
 {{
